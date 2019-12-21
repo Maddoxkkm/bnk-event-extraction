@@ -4,12 +4,15 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "run": "tsc index.ts && node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@types/node": "^12.12.20"
   },
-  "dependencies": {}
+  "dependencies": {
+    "@types/node": "^12.12.20",
+    "typescript": "^3.7.4"
+  }
 }

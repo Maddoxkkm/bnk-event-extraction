@@ -30,3 +30,10 @@ For each HIRC object, it starts with an identifer, which tells what the object i
 So within each of the objects, there should be some sort of reference to it's child. Taking advantage of this, for each object that I have no idea how to find the child, it first compiles a set of potential ids that it can look for (an id is a uint32le.), and conducts a search within all other HIRC objects to match their ids with the potential list of ids. that way we can obtain one's child without knowing it's structure. 
 
 But there's a catch. while digging around within the buffers of the contents of some of the HIRC Objects, I believe I've came accross a few scenarios where `07` Objects are being referenced from all over the place, and it contains reference to also all over the place. Obviously you don't want this as it will create a lot of mess in the child/parent structure, and it's not desirable to have this big mass of connection that connects you to all over the place. In order to eliminate this, I exclude `07` from the HIRC structure **completely**. a few digging tells me that `07` objects are sort of like a top-level category, where you can create settings and apply to all of the childs. I've determined it's useless within an event-based extraction and removed it.
+
+# How to use
+- Download latest node.js
+- clone this repo
+- do a quick `npm i` to install the dependencies
+- run `npm run-script run` to run the demo.
+- Optionally run `wem_convert.bat` to convert all the `.wem` files to `.wav` files that can be played
