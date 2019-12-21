@@ -35,5 +35,5 @@ But there's a catch. while digging around within the buffers of the contents of 
 - Download latest node.js
 - clone this repo
 - do a quick `npm i` to install the dependencies
-- run `npm run-script run` to run the demo.
+- run `npm run-script run` to run the demo (it only converts and extracts `voiceover.bnk`).
 - Optionally run `wem_convert.bat` to convert all the `.wem` files to `.wav` files that can be played
