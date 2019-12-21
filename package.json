@@ -11,8 +11,5 @@
   "devDependencies": {
     "@types/node": "^12.12.20"
   },
-  "dependencies": {
-    "@types/lodash": "^4.14.149",
-    "lodash": "^4.17.15"
-  }
+  "dependencies": {}
 }

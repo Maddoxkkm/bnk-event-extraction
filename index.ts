@@ -1,6 +1,5 @@
 import * as buffer from 'buffer'
 import * as fs from 'fs'
-import { countBy } from 'lodash'
 
 const outPath = "./EXTRACTED/"
 
@@ -105,10 +104,6 @@ if (bnkObj?.HIRC?.contentLength && bnkObj?.HIRC?.bufContent) {
                 bufContent: object.bufContent.subarray(4)
             }
         })
-
-    const eventTypeCounter = countBy(HIRCSet.map(x => x.identifier))
-
-    // console.log(eventTypeCounter)
 
     // 07s are actor-mixers. they are pointless in an event-based extraction and will add huge amounts of complexity in brute forced solutions.
     bnkObj.HIRC.list = HIRCSet.filter(hirc => hirc.identifier !== "07")
