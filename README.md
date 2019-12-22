@@ -34,6 +34,12 @@ But there's a catch. while digging around within the buffers of the contents of 
 # How to use
 - Download latest node.js
 - clone this repo
-- do a quick `npm i` to install the dependencies
+- do a quick `npm i -g typescript @types/node` to install the dependencies
 - run `npm run-script run` to run the demo (it only converts and extracts `voiceover.bnk`).
 - Optionally run `wem_convert.bat` to convert all the `.wem` files to `.wav` files that can be played
+
+# Does it work?
+
+It successfully extracted 596 audio files from `voiceover.bnk`, categorized them by the event that they were calculated to belong to. The event names were applied to the folder names as a result of knowing the event names beforehand, and placed them into `events.txt` to be calculated fnv32 hash, which then should match the event id.
+
+There is no ensuring that this extractor will work for your given use case. the version of soundbanks might just be different that it fails to do the job. or it's just the case that brute force solutions are unstable and may ruin the entire extraction afterall. feel free to try.
