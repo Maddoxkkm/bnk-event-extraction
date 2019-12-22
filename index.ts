@@ -124,17 +124,52 @@ async function recursivelyExportFoldersAndWems(hircObj: HIRCList, parentIDs: Set
     if (depthforFolder <= 0) await fs.promises.mkdir(curPath, { recursive: true });
     let newPath: string = curPath;
 
+    async function bruteForce(){
+        newPath = depthforFolder > 0 ? `${curPath}/${hircObj.name}` : curPath;
+            // create a set to condense the sets of potential ids we will have to look for.
+            const bruteForceIDSet: Set<number> = new Set();
+            // now loop finding ids, because ids are 4 bytes so -4.
+            for (let i = 0; i < hircObj.bufContent.length - 4; i++) {
+                bruteForceIDSet.add(hircObj.bufContent.readUInt32LE(i));
+            }
+
+            // generate new set of hircs that does not contain the same identifier, and is not the parent who called this instance of the function. 
+            // this is where loop backs or same level references are cut off.
+            // This assumes that you cannot put an object of one type as the child of another object that is the same type. Which idek if it's possible or not. kek. guess we'll find out.
+            const targetHIRCs: HIRCList[] = wholeHIRC.filter(item =>
+                item.identifier !== hircObj.identifier && 
+                !parentIDs.has(item.id)
+            );
+
+            // now test each id, where the real brute force begins.
+            bruteForceIDSet.forEach(potentialID => {
+                targetHIRCs.filter(item =>
+                    item.id === potentialID
+                ).forEach(async item => {
+                    // well, it matched, and if it really passed those harsh conditions, it means it's 95% the real child. surely.
+                    console.log(`id ${hircObj.id} has found a plausible child ${item.id}. Proceeding with next level explorations.`)
+                    await recursivelyExportFoldersAndWems(item, parentIDs.add(hircObj.id), wholeHIRC, newPath, depthforFolder - 1, DATABuffer)
+                })
+            });
+    }
+
     switch (hircObj.identifier) {
         // Top level 04 (events, which should be top-levels.)
         case "04":
             // 04 can contain multiple childs. 1st byte indicates the number of childs. ez.
             // all the following bytes are uint32le for child ids.
-            newPath = depthforFolder > 0 ? `${curPath}/${hircObj.name}` : curPath
-
+            newPath = depthforFolder > 0 ? `${curPath}/${hircObj.name}` : curPath;
+            const childFound: HIRCList[] = [];
             const numofChilds: number = hircObj.bufContent.readUIntLE(0, 1);
             for (let i = 0; i < numofChilds; i++) {
                 const childID: number = hircObj.bufContent.readUInt32LE(4 * i + 1)
-                const childFound: HIRCList[] = wholeHIRC.filter(item => childID === item.id && !parentIDs.has(item.id))
+                wholeHIRC.forEach(item => childID === item.id && !parentIDs.has(item.id) ? childFound.push(item) : undefined)
+                
+            }
+
+            if(childFound.length === 0) {
+                bruteForce()
+            } else {
                 childFound.forEach(async child => {
                     await recursivelyExportFoldersAndWems(child,
                         parentIDs.add(hircObj.id),
@@ -152,8 +187,11 @@ async function recursivelyExportFoldersAndWems(hircObj: HIRCList, parentIDs: Set
             newPath = curPath
 
             const child: number = hircObj.bufContent.readUInt32LE(2)
-            wholeHIRC.filter(item => item.id === child && !parentIDs.has(item.id))
-                .forEach(async child => {
+            const childs: HIRCList[] = wholeHIRC.filter(item => item.id === child && !parentIDs.has(item.id))
+            if(childs.length === 0) {
+                bruteForce()
+            } else {
+                childs.forEach(async child => {
                     await recursivelyExportFoldersAndWems(child,
                         parentIDs.add(hircObj.id),
                         wholeHIRC,
@@ -161,6 +199,8 @@ async function recursivelyExportFoldersAndWems(hircObj: HIRCList, parentIDs: Set
                         depthforFolder, // if it wants to export single child folders, count on him.
                         DATABuffer)
                 })
+            }
+                
             break;
 
         case "02":
@@ -196,33 +236,8 @@ async function recursivelyExportFoldersAndWems(hircObj: HIRCList, parentIDs: Set
             // and because there's so many object ids that are unknown, I think it's best to just fuck it and not disable it.
             // warn this via console.
             console.log(`id ${hircObj.id} has an Object type ("${hircObj.identifier}") with unknown content. It's impossible to locate Child Object with standard method. Brute Force solution is employed, but be aware of unexpected results. It will also feel a bit slower from here on it. hang on.`)
+            await bruteForce()
 
-            newPath = depthforFolder > 0 ? `${curPath}/${hircObj.name}` : curPath;
-            // create a set to condense the sets of potential ids we will have to look for.
-            const bruteForceIDSet: Set<number> = new Set();
-            // now loop finding ids, because ids are 4 bytes so -4.
-            for (let i = 0; i < hircObj.bufContent.length - 4; i++) {
-                bruteForceIDSet.add(hircObj.bufContent.readUInt32LE(i));
-            }
-
-            // generate new set of hircs that does not contain the same identifier, and is not the parent who called this instance of the function. 
-            // this is where loop backs or same level references are cut off.
-            // This assumes that you cannot put an object of one type as the child of another object that is the same type. Which idek if it's possible or not. kek. guess we'll find out.
-            const targetHIRCs: HIRCList[] = wholeHIRC.filter(item =>
-                item.identifier !== hircObj.identifier && 
-                !parentIDs.has(item.id)
-            );
-
-            // now test each id, where the real brute force begins.
-            bruteForceIDSet.forEach(potentialID => {
-                targetHIRCs.filter(item =>
-                    item.id === potentialID
-                ).forEach(async item => {
-                    // well, it matched, and if it really passed those harsh conditions, it means it's 95% the real child. surely.
-                    console.log(`id ${hircObj.id} has found a plausible child ${item.id}. Proceeding with next level explorations.`)
-                    await recursivelyExportFoldersAndWems(item, parentIDs.add(hircObj.id), wholeHIRC, newPath, depthforFolder - 1, DATABuffer)
-                })
-            });
             break;
     }
 
