@@ -14,7 +14,7 @@ events.forEach(event => {
 
 console.log(process.argv)
 
-// console.log(reverseHashTable)
+console.log(reverseHashTable)
 console.log("Reverse Hash Table for event names.... Complete")
 
 // read voiceover buffer
@@ -121,7 +121,7 @@ if (bnkObj?.HIRC?.contentLength && bnkObj?.HIRC?.bufContent) {
  */
 async function recursivelyExportFoldersAndWems(hircObj: HIRCList, parentIDs: Set<number>, wholeHIRC: HIRCList[], curPath: string, depthforFolder: number = 1, DATABuffer: Buffer): Promise<void> {
     // if the number reaches 0, create folders recursively and forget.
-    if (depthforFolder <= 0) await fs.promises.mkdir(curPath, { recursive: true });
+    if (depthforFolder <= 0 || hircObj.identifier === '02') await fs.promises.mkdir(curPath, { recursive: true });
     let newPath: string = curPath;
 
     async function bruteForce(){
@@ -216,8 +216,7 @@ async function recursivelyExportFoldersAndWems(hircObj: HIRCList, parentIDs: Set
                 const wemBuffer: Buffer | undefined = DATABuffer.subarray(startByte, endByte)
                 // Export the wemBuffer as an actual wem file. now we reached the end.
                 if (wemBuffer != undefined) {
-                    await fs.promises.writeFile(`${curPath}/${hircObj.id}.wem`, wemBuffer)
-                        .catch(() => console.log("failed?"));
+                    await fs.writeFileSync(`${curPath}/${hircObj.id}.wem`, wemBuffer)
                     console.log(`success: file ${hircObj.id}.wem has been written to ${curPath}, with the size of ${wemSize} bytes.`);
                 }
             }
